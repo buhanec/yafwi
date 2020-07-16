@@ -1,5 +1,5 @@
-from hypothesis import given
-from hypothesis.strategies import integers, sampled_from
+from hypothesis import assume, given
+from hypothesis.strategies import composite, integers, sampled_from
 import pytest
 
 from yafwi import *
@@ -17,14 +17,6 @@ from yafwi import *
 ])
 def test_aliases(cls: FixedWidthInt, expected: FixedWidthInt):
     assert cls is expected
-
-
-@pytest.mark.parametrize('val, other, expected', [
-    (int8(-128), -128, True),
-    (int8(127), 127, True),
-])
-def test_equality(val: FixedWidthInt, other: int, expected: bool):
-    assert (val == other) is expected
 
 
 @pytest.mark.parametrize('cls, min_val, max_val', [
@@ -57,10 +49,73 @@ def test_overflow(cls: FixedWidthInt):
     assert cls.min - 1 == cls.max
 
 
-@given(reference=sampled_from([int8, uint8, int16, uint16,
-                               int32, uint32, int64, uint64]),
+@given(reference=sampled_from((int8, uint8, int16, uint16,
+                               int32, uint32, int64, uint64)),
        value=integers(min_value=int(int64.min) * 100,
                       max_value=int(uint64.max) * 100))
 def test_generated(reference, value):
     generated = generate_int(reference.width, reference.unsigned)
     assert generated(value) == reference(value)
+
+
+@composite
+def ref_and_value(draw, references=(int8, uint8, int16, uint16,
+                                    int32, uint32, int64, uint64,
+                                    int128, uint128, int256, uint256)):
+    reference = draw(sampled_from(references))
+    value = draw(integers(min_value=reference.min, max_value=reference.max))
+    return reference, value
+
+
+@given(ref=ref_and_value())
+def test_eq(ref):
+    reference, value = ref
+    assert reference(value) == value
+    assert reference(value) >= value
+    assert reference(value) <= value
+    assert reference(value) == reference(value)
+    assert reference(value) >= reference(value)
+    assert reference(value) <= reference(value)
+
+
+@composite
+def ref_and_neq_values(draw, references=(int8, uint8, int16, uint16,
+                                         int32, uint32, int64, uint64,
+                                         int128, uint128, int256, uint256)):
+    reference = draw(sampled_from(references))
+    value1 = draw(integers(min_value=reference.min, max_value=reference.max))
+    value2 = draw(integers(min_value=reference.min, max_value=reference.max))
+    assume(value1 != value2)
+    return reference, value1, value2
+
+
+@given(ref=ref_and_neq_values())
+def test_neq(ref):
+    reference, value1, value2 = ref
+    assert reference(value1) != value2
+    assert reference(value2) != value1
+    assert reference(value1) != reference(value2)
+
+
+@composite
+def ref_and_lt_values(draw, references=(int8, uint8, int16, uint16,
+                                         int32, uint32, int64, uint64,
+                                         int128, uint128, int256, uint256)):
+    reference = draw(sampled_from(references))
+    value1 = draw(integers(min_value=reference.min, max_value=reference.max))
+    value2 = draw(integers(min_value=reference.min, max_value=reference.max))
+    assume(value1 < value2)
+    return reference, value1, value2
+
+
+@given(ref=ref_and_lt_values())
+def test_lt_gt(ref):
+    reference, value1, value2 = ref
+    assert reference(value1) < value2
+    assert reference(value1) <= value2
+    assert reference(value2) > value1
+    assert reference(value2) >= value1
+    assert reference(value1) < reference(value2)
+    assert reference(value1) <= reference(value2)
+    assert reference(value2) > reference(value1)
+    assert reference(value2) >= reference(value1)
