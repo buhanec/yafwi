@@ -1,6 +1,6 @@
 """Yet another fixed with integer."""
 
-__all__ = ('FixedWidthInt', 'BaseFixedWidthInt',
+__all__ = ('FixedWidthInt', 'BaseFixedWidthInt', 'generate',
            'int8', 'int16', 'int32', 'int64', 'int128', 'int256',
            'uint8', 'uint16', 'uint32', 'uint64', 'uint128', 'uint256',
            'sbyte', 'byte',
@@ -206,9 +206,6 @@ class BaseFixedWidthInt(int, metaclass=FixedWidthInt):
         return type(self)(self)
 
     def __index__(self: T) -> T:
-        return type(self)(self)
-
-    def __int__(self: T) -> T:
         return type(self)(self)
 
     def __trunc__(self: T) -> T:
