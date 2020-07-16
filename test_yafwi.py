@@ -62,5 +62,5 @@ def test_overflow(cls: FixedWidthInt):
        value=integers(min_value=int(int64.min) * 100,
                       max_value=int(uint64.max) * 100))
 def test_generated(reference, value):
-    generated = generate(reference.width, reference.unsigned)
+    generated = generate_int(reference.width, reference.unsigned)
     assert generated(value) == reference(value)

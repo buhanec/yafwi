@@ -1,6 +1,6 @@
 """Yet another fixed with integer."""
 
-__all__ = ('FixedWidthInt', 'BaseFixedWidthInt', 'generate',
+__all__ = ('FixedWidthInt', 'BaseFixedWidthInt', 'generate_int',
            'int8', 'int16', 'int32', 'int64', 'int128', 'int256',
            'uint8', 'uint16', 'uint32', 'uint64', 'uint128', 'uint256',
            'sbyte', 'byte',
@@ -277,7 +277,7 @@ class uint64(BaseFixedWidthInt):
     _unsigned = True
 
 
-def generate(width: int, unsigned: bool) -> Type[BaseFixedWidthInt]:
+def generate_int(width: int, unsigned: bool) -> Type[BaseFixedWidthInt]:
     name = f'int{width}'
     if unsigned:
         name = f'u{name}'
@@ -298,10 +298,10 @@ def generate(width: int, unsigned: bool) -> Type[BaseFixedWidthInt]:
     })
 
 
-int128 = generate(128, unsigned=False)
-uint128 = generate(128, unsigned=True)
-int256 = generate(256, unsigned=False)
-uint256 = generate(256, unsigned=True)
+int128 = generate_int(128, unsigned=False)
+uint128 = generate_int(128, unsigned=True)
+int256 = generate_int(256, unsigned=False)
+uint256 = generate_int(256, unsigned=True)
 
 
 # Aliases
@@ -330,4 +330,4 @@ def __getattr__(name: str) -> Type[BaseFixedWidthInt]:
         width = int(bits)
     else:
         raise AttributeError(name)
-    return generate(width, unsigned)
+    return generate_int(width, unsigned)
