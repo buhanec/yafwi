@@ -9,11 +9,11 @@ __all__ = ('FixedWidthInt', 'BaseFixedWidthInt', 'generate_int',
            'long', 'ulong')
 
 
+from ctypes import (c_int16, c_int32, c_int64, c_int8,
+                    c_uint16, c_uint32, c_uint64, c_uint8)
 from functools import wraps
-from typing import Protocol, Tuple, TypeVar, Type
-from ctypes import (c_int8, c_int16, c_int32, c_int64,
-                    c_uint8, c_uint16, c_uint32, c_uint64)
-
+from sys import byteorder
+from typing import Protocol, Tuple, Type, TypeVar
 
 T = TypeVar('T')
 
@@ -102,16 +102,20 @@ class BaseFixedWidthInt(int, metaclass=FixedWidthInt):
 
     def __bytes__(self) -> bytes:
         return self.to_bytes(self.width // 8,
-                             byteorder='little',
+                             byteorder=byteorder,
                              signed=not self.unsigned)
 
     @property
     def bin(self) -> str:
-        return '0b' + ''.join(f'{b:08b}' for b in reversed(bytes(self)))
+        if byteorder == 'little':
+            return '0b' + ''.join(f'{b:08b}' for b in reversed(bytes(self)))
+        return '0b' + ''.join(f'{b:08b}' for b in bytes(self))
 
     @property
     def hex(self) -> str:
-        return '0x' + ''.join(f'{b:02x}' for b in reversed(bytes(self)))
+        if byteorder == 'little':
+            return '0x' + ''.join(f'{b:02x}' for b in reversed(bytes(self)))
+        return '0x' + ''.join(f'{b:02x}' for b in bytes(self))
 
     def __repr__(self: T) -> str:
         if self.unsigned:
