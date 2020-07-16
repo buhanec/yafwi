@@ -1,4 +1,4 @@
-# Yet Another Fixed Width Integer (Library)
+# Yet Another Fixed Width Integer (Library) [<img src="https://img.shields.io/travis/buhanec/yafwi/master.svg?label=Travis+CI&style=flat-square" align="right">](https://travis-ci.org/buhanec/yafwi) [<img src="https://img.shields.io/azure-devops/build/buhanec/yafwi/3?label=Azure%20DevOps%20build&style=flat-square" align="right">](https://dev.azure.com/buhanec/yafwi/_build)
 
 Simple fixed with integers for developer experimentation.
 
