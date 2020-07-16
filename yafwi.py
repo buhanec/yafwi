@@ -1,23 +1,27 @@
 """Yet another fixed with integer."""
 
-__all__ = ('FixedWidthInt', 'int8', 'int16', 'int32', 'int64', 'uint8',
-           'uint16', 'uint32', 'uint64', 'sbyte', 'byte', 'short',
-           'ushort', 'sint', 'uint', 'long', 'ulong')
+__all__ = ('FixedWidthInt', 'BaseFixedWidthInt',
+           'int8', 'int16', 'int32', 'int64', 'int128', 'int256',
+           'uint8', 'uint16', 'uint32', 'uint64', 'uint128', 'uint256',
+           'sbyte', 'byte',
+           'short', 'ushort',
+           'int_', 'uint',
+           'long', 'ulong')
 
 
 from functools import wraps
-from typing import Protocol, Tuple
+from typing import Protocol, Tuple, TypeVar, Type
 from ctypes import (c_int8, c_int16, c_int32, c_int64,
                     c_uint8, c_uint16, c_uint32, c_uint64)
 
-# TODO: Docs
-# TODO: Comparison improvements
+
+T = TypeVar('T')
 
 
 class CTypeInt(Protocol):
     value: int
 
-    def _init_(self, value: int) -> None:
+    def __init__(self, value: int) -> None:
         ...
 
 
@@ -63,166 +67,161 @@ def take_wider(fn):
 
 class BaseFixedWidthInt(int, metaclass=FixedWidthInt):
 
-    def __new__(cls, value: int) -> int:
+    def __new__(cls: Type[T], value: int) -> T:
         if cls is BaseFixedWidthInt:
             raise RuntimeError('Use concrete implementation, not base _Int')
-        # noinspection PyArgumentList,PyUnresolvedReferences
-        return int.__new__(cls, cls._raw(value).value)
+
+        raw = cls._raw(value)
+        if isinstance(raw, int):
+            # noinspection PyArgumentList
+            return int.__new__(cls, raw)
+        # noinspection PyArgumentList
+        return int.__new__(cls, raw.value)
 
     @property
-    def width(self) -> int:
+    def width(self: T) -> T:
         # noinspection PyTypeChecker
         return type(self).width
 
     @property
-    def unsigned(self) -> bool:
+    def unsigned(self: T) -> bool:
         # noinspection PyTypeChecker
         return type(self).unsigned
 
     @property
-    def max(self) -> int:
+    def max(self: T) -> T:
         # noinspection PyTypeChecker
         return type(self).max
 
     @property
-    def min(self) -> int:
+    def min(self: T) -> T:
         # noinspection PyTypeChecker
         return type(self).min
 
-    # Absolute value
+    # Conversion / reprs
 
-    def __abs__(self) -> int:
-        return type(self)(super().__abs__())
+    def __bytes__(self) -> bytes:
+        return self.to_bytes(self.width // 8,
+                             byteorder='little',
+                             signed=not self.unsigned)
 
-    # Addition
+    @property
+    def bin(self) -> str:
+        return '0b' + ''.join(f'{b:08b}' for b in reversed(bytes(self)))
 
-    @take_wider
-    def __add__(self, other: int) -> int:
-        return type(self)(super().__add__(other))
+    @property
+    def hex(self) -> str:
+        return '0x' + ''.join(f'{b:02x}' for b in reversed(bytes(self)))
 
-    @take_wider
-    def __radd__(self, other: int) -> int:
-        return type(self)(super().__radd__(other))
-
-    # And
-
-    @take_wider
-    def __and__(self, other: int) -> int:
-        return type(self)(super().__and__(other))
-
-    @take_wider
-    def __rand__(self, other: int) -> int:
-        return type(self)(super().__rand__(other))
-
-    # Division
-
-    def __divmod__(self, other: int) -> Tuple[int, int]:
-        div, mod = super().__divmod__(other)
-        return type(self)(div), type(self)(mod)
-
-    def __floordiv__(self, other: int) -> int:
-        return type(self)(super().__floordiv__(other))
-
-    def __mod__(self, other: int) -> int:
-        return type(self)(super().__mod__(other))
-
-    # Identities
-
-    def __ceil__(self) -> int:
-        return type(self)(self)
-
-    def __floor__(self) -> int:
-        return type(self)(self)
-
-    def __index__(self) -> int:
-        return type(self)(self)
-
-    def __int__(self) -> int:
-        return type(self)(self)
-
-    def __trunc__(self) -> int:
-        return type(self)(self)
-
-    def __round__(self, n=None):
-        return type(self)(super().__round__(n))
-
-    # Pos
-
-    def __pos__(self) -> int:
-        return type(self)(super().__pos__())
-
-    # Neg
-
-    def __invert__(self) -> int:
-        return type(self)(super().__invert__())
-
-    def __neg__(self) -> int:
-        return type(self)(super().__neg__())
-
-    # Shifting
-
-    def __lshift__(self, other: int) -> int:
-        return type(self)(super().__lshift__(other))
-
-    def __rshift__(self, other: int) -> int:
-        return type(self)(super().__rshift__(other))
-
-    # Multiplication
-
-    @take_wider
-    def __mul__(self, other: int) -> int:
-        return type(self)(super().__mul__(other))
-
-    @take_wider
-    def __rmul__(self, other: int) -> int:
-        return type(self)(super().__rmul__(other))
-
-    # Or
-
-    @take_wider
-    def __or__(self, other: int) -> int:
-        return type(self)(super().__or__(other))
-
-    @take_wider
-    def __ror__(self, other: int) -> int:
-        return type(self)(super().__ror__(other))
-
-    # Exp
-
-    def __pow__(self, power: int, modulo=None):
-        return type(self)(super().__pow__(power, modulo))
-
-    # Subtract
-
-    @take_wider
-    def __sub__(self, other: int) -> int:
-        return type(self)(super().__sub__(other))
-
-    @take_wider
-    def __rsub__(self, other: int) -> int:
-        return type(self)(super().__rsub__(other))
-
-    # XOR
-
-    @take_wider
-    def __xor__(self, other: int) -> int:
-        return type(self)(super().__xor__(other))
-
-    @take_wider
-    def __rxor__(self, other: int) -> int:
-        return type(self)(super().__rxor__(other))
-
-    # Hash
-
-    def __hash__(self) -> int:
-        return super().__hash__()
-
-    def __repr__(self) -> str:
+    def __repr__(self: T) -> str:
         if self.unsigned:
             prefix = 'u'
         else:
             prefix = ''
         return f'{prefix}int{self.width}({super().__repr__()})'
+
+    # Arithmetic
+
+    @take_wider
+    def __add__(self: T, other: int) -> T:
+        return type(self)(super().__add__(other))
+
+    @take_wider
+    def __radd__(self: T, other: int) -> T:
+        return type(self)(super().__radd__(other))
+
+    @take_wider
+    def __sub__(self: T, other: int) -> T:
+        return type(self)(super().__sub__(other))
+
+    @take_wider
+    def __rsub__(self: T, other: int) -> T:
+        return type(self)(super().__rsub__(other))
+
+    @take_wider
+    def __mul__(self: T, other: int) -> T:
+        return type(self)(super().__mul__(other))
+
+    @take_wider
+    def __rmul__(self: T, other: int) -> T:
+        return type(self)(super().__rmul__(other))
+
+    def __divmod__(self: T, other: int) -> Tuple[T, T]:
+        div, mod = super().__divmod__(other)
+        return type(self)(div), type(self)(mod)
+
+    def __floordiv__(self: T, other: int) -> T:
+        return type(self)(super().__floordiv__(other))
+
+    def __mod__(self: T, other: int) -> T:
+        return type(self)(super().__mod__(other))
+
+    def __pow__(self: T, power: int, modulo=None) -> T:
+        return type(self)(super().__pow__(power, modulo))
+
+    # Bitwise ops
+
+    @take_wider
+    def __and__(self: T, other: int) -> T:
+        return type(self)(super().__and__(other))
+
+    @take_wider
+    def __rand__(self: T, other: int) -> T:
+        return type(self)(super().__rand__(other))
+
+    @take_wider
+    def __or__(self: T, other: int) -> T:
+        return type(self)(super().__or__(other))
+
+    @take_wider
+    def __ror__(self: T, other: int) -> T:
+        return type(self)(super().__ror__(other))
+
+    @take_wider
+    def __xor__(self: T, other: int) -> T:
+        return type(self)(super().__xor__(other))
+
+    @take_wider
+    def __rxor__(self: T, other: int) -> T:
+        return type(self)(super().__rxor__(other))
+
+    def __lshift__(self: T, other: int) -> T:
+        return type(self)(super().__lshift__(other))
+
+    def __rshift__(self: T, other: int) -> T:
+        return type(self)(super().__rshift__(other))
+
+    def __invert__(self: T) -> T:
+        return type(self)(super().__invert__())
+
+    # Other maths / conversions
+
+    def __abs__(self: T) -> T:
+        return type(self)(super().__abs__())
+
+    def __ceil__(self: T) -> T:
+        return type(self)(self)
+
+    def __floor__(self: T) -> T:
+        return type(self)(self)
+
+    def __index__(self: T) -> T:
+        return type(self)(self)
+
+    def __int__(self: T) -> T:
+        return type(self)(self)
+
+    def __trunc__(self: T) -> T:
+        return type(self)(self)
+
+    def __round__(self: T, n=None) -> T:
+        return type(self)(super().__round__(n))
+
+    def __pos__(self: T) -> T:
+        return type(self)(super().__pos__())
+
+    def __neg__(self: T) -> T:
+        return type(self)(super().__neg__())
 
 
 # noinspection PyPep8Naming
@@ -281,12 +280,57 @@ class uint64(BaseFixedWidthInt):
     _unsigned = True
 
 
+def generate(width: int, unsigned: bool) -> Type[BaseFixedWidthInt]:
+    name = f'int{width}'
+    if unsigned:
+        name = f'u{name}'
+
+    def _raw(value: int) -> int:
+        if not unsigned:
+            value = value + 2**(width - 1)
+        value = value % (2 ** width)
+        if not unsigned:
+            value = value - 2**(width - 1)
+        return value
+
+    # noinspection PyTypeChecker
+    return type(name, (BaseFixedWidthInt,), {
+        '_raw': _raw,
+        '_width': width,
+        '_unsigned': unsigned
+    })
+
+
+int128 = generate(128, unsigned=False)
+uint128 = generate(128, unsigned=True)
+int256 = generate(256, unsigned=False)
+uint256 = generate(256, unsigned=True)
+
+
 # Aliases
 sbyte = int8
 byte = uint8
 short = int16
 ushort = uint16
-sint = int32  # Don't want to override "int"
+int_ = int32
 uint = uint32
 long = int64
 ulong = uint64
+
+
+def __getattr__(name: str) -> Type[BaseFixedWidthInt]:
+    bits = name
+    if bits.startswith('u'):
+        unsigned = True
+        bits = name[1:]
+    else:
+        unsigned = False
+    if bits.startswith('int'):
+        bits = bits[3:]
+    else:
+        raise AttributeError(name)
+    if bits.isnumeric():
+        width = int(bits)
+    else:
+        raise AttributeError(name)
+    return generate(width, unsigned)
