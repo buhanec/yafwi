@@ -18,5 +18,5 @@ run_tests:
 
 run_lint:
   script:
-    - pylint yafwi --rcfile setup.cfg
+    - pylint yafwi
   stage: test

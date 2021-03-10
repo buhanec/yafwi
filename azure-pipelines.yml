@@ -58,5 +58,5 @@ steps:
 - script: pytest tests
   displayName: pytest
 
-- script: pylint yafwi --rcfile setup.cfg
+- script: pylint yafwi
   displayName: pylint

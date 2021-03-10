@@ -9,7 +9,7 @@ install:
   - pip install -r requirements.txt
 script:
   - pytest tests
-  - pylint yafwi --rcfile setup.cfg
+  - pylint yafwi
 
 jobs:
   include:
