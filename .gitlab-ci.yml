@@ -1,0 +1,18 @@
+cache:
+  paths:
+    - venv/
+
+before_script:
+  - python3 -V
+  - python3 -m venv venv
+  - source venv/bin/activate
+  - pip install --upgrade pytest
+  - pip install --upgrade pylint
+  - pip install --upgrade mypy
+  - pip install -r requirements.txt
+
+run_tests:
+  script:
+    - pytest
+  stage: test
+
