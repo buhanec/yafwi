@@ -13,12 +13,10 @@ before_script:
 
 run_tests:
   script:
-    - pytest
+    - pytest tests
   stage: test
 
 run_lint:
   script:
     - pylint yafwi --rcfile setup.cfg
   stage: test
-  rules:
-    - allow_failure: true
