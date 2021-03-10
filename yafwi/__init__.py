@@ -4,7 +4,8 @@ from ctypes import (c_int16, c_int32, c_int64, c_int8,
                     c_uint16, c_uint32, c_uint64, c_uint8)
 from functools import wraps
 from sys import byteorder
-from typing import Callable, Tuple, Type, TypeVar, TYPE_CHECKING, Union
+from typing import (Callable, ClassVar, Optional, TYPE_CHECKING, Tuple,
+                    Type, TypeVar, Union)
 
 __all__ = ('FixedWidthInt', 'BaseFixedWidthInt', 'generate_int',
            'int8', 'int16', 'int32', 'int64', 'int128', 'int256',
@@ -15,7 +16,7 @@ __all__ = ('FixedWidthInt', 'BaseFixedWidthInt', 'generate_int',
            'long', 'ulong')
 __version__ = '1.0.0'
 
-T = TypeVar('T')
+T = TypeVar('T', bound=int)
 
 if TYPE_CHECKING:
     from typing import Protocol
@@ -42,13 +43,13 @@ class FixedWidthInt(type):
 
     @property
     def max(cls) -> int:
-        if cls.unsigned:
+        if cls._unsigned:
             return cls(2 ** cls._width - 1)
         return cls(2 ** (cls._width - 1) - 1)
 
     @property
     def min(cls) -> int:
-        if cls.unsigned:
+        if cls._unsigned:
             return cls(0)
         return cls(-(2 ** (cls._width - 1)))
 
@@ -68,8 +69,11 @@ def take_wider(fn):
 
 
 class BaseFixedWidthInt(int, metaclass=FixedWidthInt):
+    _raw: ClassVar[Union['CTypeInt', Callable[[int], int]]]
+    _width: ClassVar[int]
+    _unsigned: ClassVar[bool]
 
-    def __new__(cls: Type[T], value: int) -> T:
+    def __new__(cls, value: int) -> 'BaseFixedWidthInt':
         if cls is BaseFixedWidthInt:
             raise RuntimeError('Use concrete implementation, not base _Int')
 
@@ -81,22 +85,22 @@ class BaseFixedWidthInt(int, metaclass=FixedWidthInt):
         return int.__new__(cls, raw.value)
 
     @property
-    def width(self: T) -> T:
+    def width(self: FixedWidthInt) -> T:
         # noinspection PyTypeChecker
         return type(self).width
 
     @property
-    def unsigned(self: T) -> bool:
+    def unsigned(self: FixedWidthInt) -> bool:
         # noinspection PyTypeChecker
         return type(self).unsigned
 
     @property
-    def max(self: T) -> T:
+    def max(self: FixedWidthInt) -> T:
         # noinspection PyTypeChecker
         return type(self).max
 
     @property
-    def min(self: T) -> T:
+    def min(self: FixedWidthInt) -> T:
         # noinspection PyTypeChecker
         return type(self).min
 
@@ -120,7 +124,7 @@ class BaseFixedWidthInt(int, metaclass=FixedWidthInt):
         return '0x' + ''.join(f'{b:02x}' for b in bytes(self))
 
     def __repr__(self: T) -> str:
-        if self.unsigned:
+        if self._unsigned:
             prefix = 'u'
         else:
             prefix = ''
@@ -162,7 +166,7 @@ class BaseFixedWidthInt(int, metaclass=FixedWidthInt):
     def __mod__(self: T, other: int) -> T:
         return type(self)(super().__mod__(other))
 
-    def __pow__(self: T, power: int, modulo=None) -> T:
+    def __pow__(self: T, power: int, modulo: Optional[int] = None) -> T:
         return type(self)(super().__pow__(power, modulo))
 
     # Bitwise ops
@@ -217,7 +221,7 @@ class BaseFixedWidthInt(int, metaclass=FixedWidthInt):
     def __trunc__(self: T) -> T:
         return type(self)(self)
 
-    def __round__(self: T, n=None) -> T:
+    def __round__(self: T, n: Optional[int] = None) -> T:
         return type(self)(super().__round__(n))
 
     def __pos__(self: T) -> T:
@@ -290,10 +294,10 @@ def generate_int(width: int, unsigned: bool) -> Type[BaseFixedWidthInt]:
 
     def _raw(value: int) -> int:
         if not unsigned:
-            value = value + 2**(width - 1)
+            value = value + 2 ** (width - 1)
         value = value % (2 ** width)
         if not unsigned:
-            value = value - 2**(width - 1)
+            value = value - 2 ** (width - 1)
         return value
 
     # noinspection PyTypeChecker
@@ -308,7 +312,6 @@ int128 = generate_int(128, unsigned=False)
 uint128 = generate_int(128, unsigned=True)
 int256 = generate_int(256, unsigned=False)
 uint256 = generate_int(256, unsigned=True)
-
 
 # Aliases
 sbyte = int8
