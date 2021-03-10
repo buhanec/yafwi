@@ -4,8 +4,7 @@ from ctypes import (c_int16, c_int32, c_int64, c_int8,
                     c_uint16, c_uint32, c_uint64, c_uint8)
 from functools import wraps
 from sys import byteorder
-from typing import (Callable, ClassVar, Optional, TYPE_CHECKING, Tuple,
-                    Type, TypeVar, Union)
+from typing import Callable, ClassVar, Optional, Tuple, Type, TypeVar
 
 __all__ = ('FixedWidthInt', 'BaseFixedWidthInt', 'generate_int',
            'int8', 'int16', 'int32', 'int64', 'int128', 'int256',
@@ -18,21 +17,9 @@ __version__ = '1.0.0'
 
 T = TypeVar('T', bound=int)
 
-if TYPE_CHECKING:
-    from typing import Protocol
-
-    # pylint: disable=too-few-public-methods
-    class CTypeInt(Protocol):
-        value: int
-
-        # pylint: disable=super-init-not-called
-        # noinspection PyUnusedLocal
-        def __init__(self, value: int) -> None:
-            ...
-
 
 class FixedWidthInt(type):
-    _raw: Union['CTypeInt', Callable[[int], int]]
+    _raw: Callable[[int], int]
     _width: int
     _unsigned: bool
 
@@ -72,7 +59,7 @@ def take_wider(fn):
 
 
 class BaseFixedWidthInt(int, metaclass=FixedWidthInt):
-    _raw: ClassVar[Union['CTypeInt', Callable[[int], int]]]
+    _raw: Callable[[int], int]
     _width: ClassVar[int]
     _unsigned: ClassVar[bool]
 
@@ -81,11 +68,9 @@ class BaseFixedWidthInt(int, metaclass=FixedWidthInt):
             raise RuntimeError('Use concrete implementation, not base _Int')
 
         raw = cls._raw(value)
-        if isinstance(raw, int):
-            # noinspection PyArgumentList
-            return int.__new__(cls, raw)
-        # noinspection PyArgumentList
-        return int.__new__(cls, raw.value)
+        if hasattr(raw, 'value'):
+            return int.__new__(cls, raw.value)
+        return int.__new__(cls, raw)
 
     @property
     def width(self: FixedWidthInt) -> T:
