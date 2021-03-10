@@ -13,7 +13,7 @@ __all__ = ('FixedWidthInt', 'BaseFixedWidthInt', 'generate_int',
            'short', 'ushort',
            'int_', 'uint',
            'long', 'ulong')
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 T = TypeVar('T', bound=int)
 

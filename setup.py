@@ -6,7 +6,7 @@ with open('README.md') as f:
 setup(
     name='yafwi',
     packages=find_packages(),
-    version='1.0.0',
+    version='1.0.1',
     author='Alen Buhanec',
     author_email='<alen.buhanec@gmail.com>',
     license='MIT',
