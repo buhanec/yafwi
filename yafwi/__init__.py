@@ -21,9 +21,12 @@ T = TypeVar('T', bound=int)
 if TYPE_CHECKING:
     from typing import Protocol
 
+    # pylint: disable=too-few-public-methods
     class CTypeInt(Protocol):
         value: int
 
+        # pylint: disable=super-init-not-called
+        # noinspection PyUnusedLocal
         def __init__(self, value: int) -> None:
             ...
 
@@ -215,6 +218,7 @@ class BaseFixedWidthInt(int, metaclass=FixedWidthInt):
     def __floor__(self: T) -> T:
         return type(self)(self)
 
+    # pylint: disable=invalid-index-returned
     def __index__(self: T) -> T:
         return type(self)(self)
 
