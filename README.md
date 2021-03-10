@@ -8,7 +8,7 @@ Simple fixed with integers for developer experimentation.
 
 ## Installation
 
-Available through [yafwi - PyPI](https://pypi.org/project/spookyhash/) using `pip install yafwi`.
+Available through [yafwi - PyPI](https://pypi.org/project/yafwi/) using `pip install yafwi`.
 
 ## Some Examples
 
@@ -24,7 +24,7 @@ Available through [yafwi - PyPI](https://pypi.org/project/spookyhash/) using `pi
 >>> int8(120)
 int8(120)
 
->>> int8(120) + 120  # Arithmetic with Python int preferves type
+>>> int8(120) + 120  # Arithmetic with Python int preserves type
 int8(-16)
 >>> int8(120) + int16(120)  # Arithmetic will take result in larger width
 int16(240)
